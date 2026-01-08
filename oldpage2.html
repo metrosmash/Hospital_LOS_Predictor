@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>County Hospitals</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        #sidebar {
+            width: 30%;
+            padding: 15px;
+            border-right: 2px solid #ccc;
+            overflow-y: auto;
+        }
+
+        #map {
+            width: 70%;
+        }
+
+        .hospital-item {
+            cursor: pointer;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .hospital-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h3 id="county-title"></h3>
+    <div id="hospital-list"></div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const countyId = localStorage.getItem("selectedCountyId");
+    const countyName = localStorage.getItem("selectedCountyName");
+
+    document.getElementById("county-title").textContent =
+        `Hospitals in ${countyName} County`;
+
+    const map = L.map('map');
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let hospitalLayer;
+
+    // ----------------------------
+    // 1. Load & zoom to county
+    // ----------------------------
+    fetch("ny_counties.geojson")
+        .then(res => res.json())
+        .then(data => {
+            const countyFeature = data.features.find(
+                f => f.properties.gnis_id === countyId
+            );
+
+            const countyLayer = L.geoJSON(countyFeature, {
+                style: {
+                    color: "#000",
+                    weight: 2,
+                    fillOpacity: 0.1
+                }
+            }).addTo(map);
+
+            map.fitBounds(countyLayer.getBounds());
+
+            loadHospitals();
+        });
+
+    // ----------------------------
+    // 2. Load hospitals in county
+    // ----------------------------
+    function loadHospitals() {
+        fetch("hospital_location_geojson1.geojson")
+            .then(res => res.json())
+            .then(data => {
+
+                const hospitals = data.features.filter(
+                    f => f.properties.gnis_id === countyId
+                );
+
+                hospitalLayer = L.geoJSON(hospitals, {
+                    pointToLayer: (feature, latlng) =>
+                        L.marker(latlng),
+                    onEachFeature: (feature, layer) => {
+                        layer.bindPopup(feature.properties["Facility Name"]);
+                    }
+                }).addTo(map);
+
+                populateHospitalList(hospitals);
+            });
+    }
+
+    // ----------------------------
+    // 3. Populate hospital list
+    // ----------------------------
+    function populateHospitalList(hospitals) {
+        const list = document.getElementById("hospital-list");
+
+        hospitals.forEach(hospital => {
+            const div = document.createElement("div");
+            div.className = "hospital-item";
+            div.textContent = hospital.properties["Facility Name"];
+
+            div.onclick = () => {
+                const coords = hospital.geometry.coordinates;
+                map.setView([coords[1], coords[0]], 15);
+            };
+
+
+            list.appendChild(div);
+        });
+    }
+</script>
+
+</body>
+</html>

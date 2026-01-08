@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet Map</title>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        .county-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: black;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MAP CONTAINER (THIS WAS THE MAIN ERROR) -->
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <!-- Your map logic -->
+    <script>
+    // Initialize the map
+    const map = L.map('map').setView([43.0, -75.0], 7);
+
+    // Base map
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Load counties
+    fetch("ny_counties.geojson")
+        .then(response => response.json())
+        .then(data => {
+
+            const countiesLayer = L.geoJSON(data, {
+                style: {
+                    color: "#333",
+                    weight: 1,
+                    fillOpacity: 0.6
+                },
+
+                onEachFeature: function (feature, layer) {
+
+                    // ---- PERMANENT LABEL ----
+                    layer.bindTooltip(
+                        feature.properties.name, // make sure this field exists
+                        {
+                            permanent: true,
+                            direction: "center",
+                            className: "county-label"
+                        }
+                    );
+
+                    // ---- CLICK HANDLER ----
+                    layer.on("click", function () {
+                        const countyId = feature.properties.gnis_id;
+                        const countyName = feature.properties.name;
+
+                        // Save selected county
+                        localStorage.setItem("selectedCountyId", countyId);
+                        localStorage.setItem("selectedCountyName", countyName);
+
+                        // Redirect to next map
+                        window.location.href = "county_map.html";
+                    });
+
+                    // ---- OPTIONAL HOVER EFFECT ----
+                    layer.on("mouseover", function (e) {
+                        e.target.setStyle({
+                            weight: 3,
+                            fillOpacity: 0.8
+                        });
+                    });
+
+                    layer.on("mouseout", function (e) {
+                        countiesLayer.resetStyle(e.target);
+                    });
+                }
+            }).addTo(map);
+        });
+</script>
+
+</body>
+</html>
