@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Results</title>
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
+    
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--color-bg-alt);
+        }
+        
+        .results-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+        }
+        
+        .result-card {
+            background: white;
+            padding: var(--space-xl);
+            border-radius: 8px;
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .prediction-display {
+            text-align: center;
+            padding: var(--space-2xl);
+            background: linear-gradient(135deg, #2c5282 0%, #48bb78 100%);
+            border-radius: 8px;
+            color: white;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .prediction-value {
+            font-size: 64px;
+            font-weight: 700;
+            margin: var(--space-md) 0;
+        }
+        
+        .prediction-label {
+            font-size: var(--font-size-lg);
+            opacity: 0.9;
+        }
+        
+        .confidence-bar {
+            margin-top: var(--space-lg);
+            padding: var(--space-lg);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+        }
+        
+        .confidence-range {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--space-sm);
+            font-size: var(--font-size-sm);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+        }
+        
+        .info-item {
+            padding: var(--space-md);
+            background: var(--color-bg-alt);
+            border-radius: 6px;
+        }
+        
+        .info-item-label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .info-item-value {
+            font-weight: 600;
+            font-size: var(--font-size-lg);
+            color: var(--color-text);
+        }
+        
+        .risk-factors {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .risk-factor {
+            padding: var(--space-md);
+            margin-bottom: var(--space-sm);
+            background: #fff5f5;
+            border-left: 4px solid var(--color-warning);
+            border-radius: 4px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--space-md);
+            margin-top: var(--space-xl);
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+    <h1 class="app-title">Prediction Results</h1>
+    <div class="breadcrumb" id="breadcrumb"></div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="results-container">
+    
+    <!-- Main Prediction Display -->
+    <div class="prediction-display">
+        <div class="prediction-label">Predicted Length of Stay</div>
+        <div class="prediction-value" id="predicted-los">--</div>
+        <div class="prediction-label">days</div>
+        
+        <div class="confidence-bar">
+            <div style="font-size: var(--font-size-sm); opacity: 0.9;">
+                95% Confidence Interval
+            </div>
+            <div class="confidence-range">
+                <span id="confidence-low">--</span>
+                <span id="confidence-high">--</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hospital Context -->
+    <div class="result-card">
+        <h2 style="margin-bottom: var(--space-lg);">Hospital Context</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-item-label">Hospital</div>
+                <div class="info-item-value" id="display-hospital">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">County</div>
+                <div class="info-item-value" id="display-county">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Hospital Average LOS</div>
+                <div class="info-item-value" id="hospital-avg">4.2 days</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Patient Factors -->
+    <div class="result-card">
+        <h2 style="margin-bottom: var(--space-lg);">Patient Information</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-item-label">Age Group</div>
+                <div class="info-item-value" id="display-age">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Gender</div>
+                <div class="info-item-value" id="display-gender">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Race</div>
+                <div class="info-item-value" id="display-race">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Ethnicity</div>
+                <div class="info-item-value" id="display-ethnicity">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Insurance</div>
+                <div class="info-item-value" id="display-insurance">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Admission Type</div>
+                <div class="info-item-value" id="display-admission">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Diagnosis Group</div>
+                <div class="info-item-value" id="display-diagnosis">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Medical/Surgical</div>
+                <div class="info-item-value" id="display-medsurg">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Emergency Dept</div>
+                <div class="info-item-value" id="display-emergency">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Severity</div>
+                <div class="info-item-value" id="display-severity">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Comorbidities</div>
+                <div class="info-item-value" id="display-comorbidity">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-item-label">Patient Disposition</div>
+                <div class="info-item-value" id="display-disposition">--</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Risk Factors -->
+    <div class="result-card">
+        <h2 style="margin-bottom: var(--space-lg);">Contributing Factors</h2>
+        <ul class="risk-factors" id="risk-factors">
+            <!-- Populated by JavaScript -->
+        </ul>
+    </div>
+    
+    <!-- Actions -->
+    <div class="action-buttons">
+        <button class="btn btn-primary" onclick="window.print()">
+            Print Report
+        </button>
+        <button class="btn btn-secondary" onclick="newPrediction()">
+            New Prediction
+        </button>
+        <button class="btn btn-secondary" onclick="history.back()">
+            ← Back to Form
+        </button>
+    </div>
+    
+</main>
+
+<!-- Scripts -->
+<script src="/assets/js/stateManager.js"></script>
+
+<script>
+    // =============================================
+    // LOAD PREDICTION DATA FROM CACHE
+    // =============================================
+    
+    const cachedData = StateManager.getCachedPrediction();
+    
+    if (!cachedData || !cachedData.result) {
+        StateManager.showError(
+            'No prediction data found. Please complete the form first.',
+            '/page/prediction_form'
+        );
+        throw new Error('No prediction data');
+    }
+    
+    const inputData = cachedData.input;   // Original form submission
+    const apiResult = cachedData.result;  // ✅ Fixed: was 'results'
+    
+    console.log('Cached data:', cachedData);
+    console.log('API result:', apiResult);
+    
+    // =============================================
+    // UPDATE BREADCRUMBS
+    // =============================================
+    
+    StateManager.renderBreadcrumbs();
+    
+    // =============================================
+    // DISPLAY PREDICTION RESULTS
+    // =============================================
+    
+    // Main prediction value
+    document.getElementById('predicted-los').textContent = 
+        apiResult.predicted_los || '--';  // ✅ Fixed: removed underscore
+    
+    // Confidence interval
+    if (apiResult.confidence_interval && apiResult.confidence_interval.length === 2) {
+        document.getElementById('confidence-low').textContent = 
+            `${apiResult.confidence_interval[0]} days`;
+        document.getElementById('confidence-high').textContent = 
+            `${apiResult.confidence_interval[1]} days`;
+    }
+    
+    // =============================================
+    // DISPLAY HOSPITAL CONTEXT
+    // =============================================
+    
+    document.getElementById('display-hospital').textContent = 
+        apiResult.metadata?.hospital_name || inputData.hospital_name || '--';
+    document.getElementById('display-county').textContent = 
+        apiResult.metadata?.county_name || inputData.county_name || '--';
+    
+    // =============================================
+    // DISPLAY PATIENT INFORMATION
+    // =============================================
+    
+    document.getElementById('display-age').textContent = 
+        inputData['Age Group'] || '--';
+    document.getElementById('display-gender').textContent = 
+        inputData['Gender'] || '--';
+    document.getElementById('display-race').textContent = 
+        inputData['Race'] || '--';
+    document.getElementById('display-ethnicity').textContent = 
+        inputData['Ethnicity'] || '--';
+    document.getElementById('display-insurance').textContent = 
+        inputData['Payment Typology 1'] || '--';
+    document.getElementById('display-admission').textContent = 
+        inputData['Type of Admission'] || '--';
+    document.getElementById('display-diagnosis').textContent = 
+        inputData['APR MDC Description'] || '--';
+    document.getElementById('display-medsurg').textContent = 
+        inputData['APR Medical Surgical Description'] || '--';
+    document.getElementById('display-emergency').textContent = 
+        inputData['Emergency Department Indicator'] === 'Y' ? 'Yes' : 
+        (inputData['Emergency Department Indicator'] === 'N' ? 'No' : '--');
+    document.getElementById('display-severity').textContent = 
+        inputData['APR Severity of Illness Code'] ? 
+        `Level ${inputData['APR Severity of Illness Code']}` : '--';
+    document.getElementById('display-comorbidity').textContent = 
+        inputData.comorbidity_count || 'None reported';
+    document.getElementById('display-disposition').textContent = 
+        inputData['Patient Disposition'] || '--';
+    
+    // =============================================
+    // DISPLAY RISK FACTORS FROM API
+    // =============================================
+    
+    const riskList = document.getElementById('risk-factors');
+    riskList.innerHTML = ''; // Clear existing
+    
+    if (apiResult.risk_factors && apiResult.risk_factors.length > 0) {
+        apiResult.risk_factors.forEach(factor => {
+            const li = document.createElement('li');
+            li.className = 'risk-factor';
+            
+            // Handle structured risk factor objects
+            if (typeof factor === 'object' && factor.factor) {
+                const impactColor = {
+                    'high': '#e53e3e',
+                    'medium': '#ed8936',
+                    'low': '#48bb78',
+                    'none': '#718096'
+                }[factor.impact] || '#718096';
+                
+                li.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 4px;">
+                        ${factor.factor}
+                        <span style="
+                            float: right; 
+                            font-size: 12px; 
+                            color: ${impactColor};
+                            font-weight: 700;
+                        ">
+                            ${factor.impact_days || ''}
+                        </span>
+                    </div>
+                    <div style="font-size: 14px; color: #718096;">
+                        ${factor.description || ''}
+                    </div>
+                `;
+            } else {
+                // Fallback for simple string factors
+                li.textContent = typeof factor === 'string' ? factor : JSON.stringify(factor);
+            }
+            
+            riskList.appendChild(li);
+        });
+    } else {
+        riskList.innerHTML = '<li class="risk-factor">No specific risk factors identified</li>';
+    }
+    
+    // =============================================
+    // ACTION HANDLERS
+    // =============================================
+    
+    function newPrediction() {
+        // Clear cache
+        sessionStorage.removeItem('prediction_cache');
+        
+        // Navigate back to county selection
+        window.location.href = '/';
+    }
+</script>
+
+</body>
+</html>

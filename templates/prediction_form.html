@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOS Prediction</title>
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
+    
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--color-bg-alt);
+        }
+        
+        .form-section {
+            background: white;
+            padding: var(--space-xl);
+            border-radius: 8px;
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .form-section-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 2px solid var(--color-border);
+            color: var(--color-primary);
+        }
+        
+        .hospital-info {
+            background: var(--color-bg-alt);
+            padding: var(--space-lg);
+            border-radius: 6px;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: var(--color-text-muted);
+        }
+        
+        .info-value {
+            color: var(--color-text);
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+    <h1 class="app-title">Length of Stay Prediction</h1>
+    <div class="breadcrumb" id="breadcrumb"></div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="form-container">
+    
+    <!-- Hospital Context -->
+    <div class="hospital-info">
+        <h2 style="margin-bottom: var(--space-md); font-size: var(--font-size-lg);">
+            Prediction Context
+        </h2>
+        <div class="info-row">
+            <span class="info-label">Hospital:</span>
+            <span class="info-value" id="hospital-name">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">County:</span>
+            <span class="info-value" id="county-name">--</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Hospital ID:</span>
+            <span class="info-value" id="hospital-id">--</span>
+        </div>
+    </div>
+    
+    <!-- Prediction Form -->
+    <form id="prediction-form">
+        
+        <!-- Section 1: Demographics -->
+        <div class="form-section">
+            <h3 class="form-section-title">Patient Demographics</h3>
+            
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="age_group" class="form-label required">Age Group</label>
+                    <select id="age_group" name="age_group" class="form-select">
+                        <option value="">Select age range</option>
+                        <option value="0 to 17">0 to 17 years</option>
+                        <option value="18 to 29">18 to 29 years</option>
+                        <option value="30 to 49">30 to 49 years</option>
+                        <option value="50 to 69">50 to 69 years</option>
+                        <option value="70 or Older">70 or Older years</option>
+                    </select>
+                </div>
+                
+                <div class="form-field">
+                    <label for="gender" class="form-label required">Gender</label>
+                    <select id="gender" name="gender" class="form-select">
+                        <option value="">Select gender</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="race" class="form-label required">Race</label>
+                    <select id="race" name="race" class="form-select">
+                        <option value="">Select race</option>
+                        <option value="Black/African American">Black/African American</option>
+                        <option value="Multi-racial">Multi-racial</option>
+                        <option value="White">White</option>
+                        <option value="Other Race">Other Race</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="ethnicity" class="form-label required">Ethnicity</label>
+                    <select id="ethnicity" name="ethnicity" class="form-select">
+                        <option value="">Select ethnicity</option>
+                        <option value="Multi-ethnic">Multi-ethnic</option>
+                        <option value="Spanish/Hispanic">Spanish/Hispanic</option>
+                        <option value="Not Span/Hispanic">Not Spanish/Hispanic</option>
+                        <option value="Unknown">Unknown</option>
+                    </select>
+                </div>
+                
+                <div class="form-field">
+                    <label for="insurance_type" class="form-label required">Insurance Type</label>
+                    <select id="insurance_type" name="insurance_type" class="form-select">
+                        <option value="">Select insurance</option>
+                        <option value="Medicare">Medicare</option>
+                        <option value="Medicaid">Medicaid</option>
+                        <option value="Private Health Insurance">Private Health Insurance</option>
+                        <option value="Self-Pay">Self-Pay</option>
+                        <option value="Blue Cross/Blue Shield">Blue Cross/Blue Shield</option>
+                        <option value="Department of Corrections">Department of Corrections</option>
+                        <option value="Federal/State/Local/VA">Federal/State/Local/VA</option>
+                        <option value="Managed Care, Unspecified">Managed Care, Unspecified</option>
+                        <option value="Miscellaneous/Other">Miscellaneous/Other</option>
+                        <option value="Unknown">Unknown</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 2: Clinical Information -->
+        <div class="form-section">
+            <h3 class="form-section-title">Clinical Information</h3>
+            
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="admission_type" class="form-label required">Admission Type</label>
+                    <select id="admission_type" name="admission_type" class="form-select">
+                        <option value="">Select admission type</option>
+                        <option value="Emergency">Emergency</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Elective">Elective/Scheduled</option>
+                        <option value="Newborn">Newborn</option>
+                        <option value="Trauma">Trauma</option>
+                        <option value="Not Available">Not Available</option>
+                    </select>
+                </div>
+                
+                <div class="form-field">
+                    <label for="patient_disposition" class="form-label required">Patient Disposition</label>
+                    <select id="patient_disposition" name="patient_disposition" class="form-select">
+                        <option value="">Select patient disposition</option>
+                        <option value="Home or Self Care">Home or Self Care</option>
+                        <option value="Home w/ Home Health Services">Home w/ Home Health Services</option>
+                        <option value="Short-term Hospital">Short-term Hospital</option>
+                        <option value="Skilled Nursing Home">Skilled Nursing Home</option>
+                        <option value="Inpatient Rehabilitation Facility">Inpatient Rehabilitation Facility</option>
+                        <option value="Hospice - Home">Hospice - Home</option>
+                        <option value="Hospice - Medical Facility">Hospice - Medical Facility</option>
+                        <option value="Expired">Expired</option>
+                        <option value="Left Against Medical Advice">Left Against Medical Advice</option>
+                        <option value="Medicaid Cert Nursing Facility">Medicaid Cert Nursing Facility</option>
+                        <option value="Medicare Cert Long Term Care Hospital">Medicare Cert Long Term Care Hospital</option>
+                        <option value="Psychiatric Hospital or Unit of Hosp">Psychiatric Hospital or Unit of Hosp</option>
+                        <option value="Critical Access Hospital">Critical Access Hospital</option>
+                        <option value="Cancer Center or Children's Hospital">Cancer Center or Children's Hospital</option>
+                        <option value="Another Type Not Listed">Another Type Not Listed</option>
+                        <option value="Federal Health Care Facility">Federal Health Care Facility</option>
+                        <option value="Facility w/ Custodial/Supportive Care">Facility w/ Custodial/Supportive Care</option>
+                        <option value="Hosp Basd Medicare Approved Swing Bed">Hosp Basd Medicare Approved Swing Bed</option>
+                        <option value="Court/Law Enforcement">Court/Law Enforcement</option>
+                        <option value="Admitted from Ambulatory Surgery">Admitted from Ambulatory Surgery</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="diagnosis_group" class="form-label required">Primary Diagnosis Group</label>
+                    <select id="diagnosis_group" name="diagnosis_group" class="form-select">
+                        <option value="">Select diagnosis</option>
+                        <option value="Pre-MDC or Ungroupable">Pre-MDC or Ungroupable</option>
+                        <option value="Human Immunodeficiency Virus Infections">Human Immunodeficiency Virus Infections</option>
+                        <option value="Diseases and Disorders of the Circulatory System">Circulatory System</option>
+                        <option value="Pregnancy, Childbirth and the Puerperium">Pregnancy & Childbirth</option>
+                        <option value="Newborns and Other Neonates with Conditions Originating in the Perinatal Period">Newborns & Neonates</option>
+                        <option value="Diseases and Disorders of the Musculoskeletal System and Conn Tissue">Musculoskeletal System</option>
+                        <option value="Diseases and Disorders of the Respiratory System">Respiratory System</option>
+                        <option value="Diseases and Disorders of the Digestive System">Digestive System</option>
+                        <option value="Diseases and Disorders of the Nervous System">Nervous System</option>
+                        <option value="Infectious and Parasitic Diseases, Systemic or Unspecified Sites">Infectious Diseases</option>
+                        <option value="Diseases and Disorders of the Kidney and Urinary Tract">Kidney & Urinary Tract</option>
+                        <option value="Mental Diseases and Disorders">Mental Diseases</option>
+                        <option value="Endocrine, Nutritional and Metabolic Diseases and Disorders">Endocrine & Metabolic</option>
+                        <option value="Alcohol/Drug Use and Alcohol/Drug Induced Organic Mental Disorders">Alcohol/Drug Use</option>
+                        <option value="Diseases and Disorders of the Hepatobiliary System and Pancreas">Hepatobiliary & Pancreas</option>
+                        <option value="Diseases and Disorders of the Skin, Subcutaneous Tissue and Breast">Skin & Breast</option>
+                        <option value="Diseases and Disorders of Blood, Blood Forming Organs and Immunological Disorders">Blood & Immunological</option>
+                        <option value="Ear, Nose, Mouth, Throat and Craniofacial Diseases and Disorders">ENT & Craniofacial</option>
+                        <option value="Rehabilitation, Aftercare, Other Factors Influencing Health Status and Other Health Service Contacts">Rehabilitation & Aftercare</option>
+                        <option value="Poisonings, Toxic Effects, Other Injuries and Other Complications of Treatment">Poisonings & Injuries</option>
+                        <option value="Diseases and Disorders of the Female Reproductive System">Female Reproductive</option>
+                        <option value="Lymphatic, Hematopoietic, Other Malignancies, Chemotherapy and Radiotherapy">Malignancies & Chemotherapy</option>
+                        <option value="Diseases and Disorders of the Male Reproductive System">Male Reproductive</option>
+                        <option value="Multiple Significant Trauma">Multiple Trauma</option>
+                        <option value="Diseases and Disorders of the Eye">Eye Disorders</option>
+                        <option value="Burns">Burns</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="medical/surgical" class="form-label required">Medical/Surgical</label>
+                    <select id="medical/surgical" name="medical/surgical" class="form-select">
+                        <option value="">Select type</option>
+                        <option value="Medical">Medical</option>
+                        <option value="Surgical">Surgical</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="is_emergency" class="form-label required">Emergency Department Indicator</label>
+                    <select id="is_emergency" name="is_emergency" class="form-select">
+                        <option value="">Was patient in ED?</option>
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                    <span class="form-help">Patient admitted through Emergency Department</span>
+                </div>
+                
+                <div class="form-field">
+                    <label for="severity" class="form-label required">Severity Level</label>
+                    <select id="severity" name="severity" class="form-select">
+                        <option value="">Select severity</option>
+                        <option value="1">Minor (Level 1)</option>
+                        <option value="2">Moderate (Level 2)</option>
+                        <option value="3">Severe (Level 3)</option>
+                        <option value="4">Critical (Level 4)</option>
+                    </select>
+                    <span class="form-help">Based on clinical assessment</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 3: Additional Factors (Optional) -->
+        <div class="form-section">
+            <h3 class="form-section-title">Additional Factors (Optional)</h3>
+            
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="comorbidity_count" class="form-label">Number of Comorbidities</label>
+                    <input 
+                        type="number" 
+                        id="comorbidity_count" 
+                        name="comorbidity_count"
+                        class="form-input"
+                        min="0" 
+                        max="10"
+                        placeholder="0"
+                    />
+                    <span class="form-help">Count of chronic conditions (0-10)</span>
+                </div>
+                
+                <div class="form-field">
+                    <label for="prior_admissions" class="form-label">Prior Admissions (90 days)</label>
+                    <input 
+                        type="number" 
+                        id="prior_admissions" 
+                        name="prior_admissions"
+                        class="form-input"
+                        min="0" 
+                        max="50"
+                        placeholder="0"
+                    />
+                    <span class="form-help">Hospital visits in last 3 months</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary btn-full btn-lg">
+            <span>Calculate Predicted Length of Stay</span>
+            <span>→</span>
+        </button>
+        
+    </form>
+    
+</main>
+
+<!-- Scripts -->
+<script src="/assets/js/stateManager.js"></script>
+<script src="/assets/js/validation.js"></script>
+
+<script>
+    // =============================================
+    // VALIDATE REQUIRED STATE
+    // =============================================
+    
+    if (!StateManager.validateRequired(['hospital_id', 'hospital_name', 'county_name'])) {
+        throw new Error('Missing required parameters');
+    }
+    
+    const hospitalId = StateManager.getParam('hospital_id');
+    const hospitalName = StateManager.getParam('hospital_name');
+    const countyName = StateManager.getParam('county_name');
+    const countyId = StateManager.getParam('county_id');
+    
+    // =============================================
+    // UPDATE PAGE CONTENT
+    // =============================================
+    
+    document.getElementById('hospital-name').textContent = hospitalName;
+    document.getElementById('county-name').textContent = countyName;
+    document.getElementById('hospital-id').textContent = hospitalId;
+    
+    StateManager.renderBreadcrumbs();
+    
+    // =============================================
+    // ATTACH VALIDATION
+    // =============================================
+    
+    Validator.attachLiveValidation('prediction-form');
+    
+    // =============================================
+    // FORM SUBMISSION - SINGLE UNIFIED HANDLER
+    // =============================================
+    
+    document.getElementById('prediction-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Clear previous errors
+        Validator.clearAllErrors();
+        
+        // Get form data
+        const formData = Validator.getFormData('prediction-form');
+        
+        // Validate
+        const validation = Validator.validateForm(formData);
+        
+        if (!validation.valid) {
+            // Show errors
+            Object.keys(validation.errors).forEach(fieldName => {
+                Validator.showFieldError(fieldName, validation.errors[fieldName]);
+            });
+            
+            // Scroll to first error
+            const firstError = document.querySelector('.error');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            return;
+        }
+        
+        // Build prediction payload
+        const payload = Validator.buildPredictionPayload(formData, {
+            hospital_id: hospitalId,
+            hospital_name: hospitalName,
+            county_name: countyName,
+            county_id: countyId
+        });
+        
+        console.log('Sending prediction request:', payload);
+        
+        // Show loading state
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Calculating...</span>';
+        
+        try {
+            const response = await fetch('/api/predict', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `API Error: ${response.status}`);
+            }
+            
+            const predictionResult = await response.json();
+            
+            console.log('Prediction received:', predictionResult);
+            
+            // Cache BOTH input data AND prediction results
+            StateManager.cachePredictionData({
+                input: payload,
+                result: predictionResult
+            });
+            
+            // Navigate to results
+            StateManager.navigate('/page/prediction_result', {
+                hospital_id: hospitalId,
+                hospital_name: hospitalName,
+                county_name: countyName,
+                county_id: countyId
+            });
+            
+        } catch (error) {
+            console.error('Prediction failed:', error);
+            
+            // Show user-friendly error
+            alert(`Prediction failed: ${error.message}\n\nPlease check your inputs and try again.`);
+            
+            // Restore button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Selection</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/assets/css/base.css">
+    
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            padding: var(--space-md);
+            background: white;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: var(--font-size-xl);
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+        
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-muted);
+            margin-top: var(--space-xs);
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+    <h1 class="app-title" id="page-title">Loading...</h1>
+    <div class="breadcrumb" id="breadcrumb"></div>
+</header>
+
+<!-- MAIN CONTAINER -->
+<div class="app-container">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="sidebar-title">Hospitals</h2>
+        
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="hospital-count">0</div>
+                <div class="stat-label">Hospitals</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="county-area">--</div>
+                <div class="stat-label">sq mi</div>
+            </div>
+        </div>
+        
+        <!-- Hospital list -->
+        <div id="hospital-list" role="list"></div>
+    </aside>
+    
+    <!-- RIGHT: Map -->
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+    
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/assets/js/stateManager.js"></script>
+<script src="/assets/js/mapUtils.js"></script>
+
+<script>
+    // =============================================
+    // VALIDATE REQUIRED STATE
+    // =============================================
+    
+    if (!StateManager.validateRequired(['county_id', 'county_name'])) {
+        // Will auto-redirect if invalid
+        throw new Error('Missing required parameters');
+    }
+    
+    const countyId = StateManager.getParam('county_id');
+    const countyName = StateManager.getParam('county_name');
+    
+    // =============================================
+    // UPDATE PAGE TITLE & BREADCRUMBS
+    // =============================================
+    
+    document.getElementById('page-title').textContent = `${countyName} County Hospitals`;
+    StateManager.renderBreadcrumbs();
+    
+    // =============================================
+    // INITIALIZE MAP
+    // =============================================
+    
+    let map, countyLayer, hospitalLayer;
+    let hospitals = [];
+    
+    async function initMap() {
+        const loading = MapUtils.showLoading('map', 'Loading hospitals...');
+        
+        try {
+            // Create map (no initial view - will fit to county)
+            map = L.map('map');
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+            
+            // Load county boundary
+            await loadCountyBoundary();
+            
+            // Load hospitals in this county
+            await loadHospitals();
+            
+            MapUtils.hideLoading();
+            
+        } catch (error) {
+            console.error('Map initialization failed:', error);
+            MapUtils.hideLoading();
+        }
+    }
+    
+    // =============================================
+    // LOAD COUNTY BOUNDARY
+    // =============================================
+    
+    async function loadCountyBoundary() {
+        const countyData = await MapUtils.fetchGeoJSON('/assets/data/ny_counties.geojson');
+        
+        const countyFeature = MapUtils.findFeature(countyData, 'gnis_id', countyId);
+        
+        if (!countyFeature) {
+            throw new Error(`County ${countyId} not found`);
+        }
+        
+        // Add county boundary
+        countyLayer = L.geoJSON(countyFeature, {
+            style: {
+                color: '#2c5282',
+                weight: 2,
+                fillOpacity: 0.1,
+                fillColor: '#edf2f7'
+            }
+        }).addTo(map);
+        
+        // Fit map to county
+        map.fitBounds(countyLayer.getBounds());
+        
+        // Update area stat (rough estimate)
+        const bounds = countyLayer.getBounds();
+        const area = Math.round(
+            map.distance(bounds.getSouthWest(), bounds.getNorthEast()) / 1609 // meters to miles
+        );
+        document.getElementById('county-area').textContent = area;
+    }
+    
+    // =============================================
+    // LOAD HOSPITALS
+    // =============================================
+    
+    async function loadHospitals() {
+        const hospitalData = await MapUtils.fetchGeoJSON('/assets/data/hospital_location_geojson1.geojson');
+        
+        // Filter hospitals in this county
+        hospitals = MapUtils.filterFeatures(hospitalData, 'gnis_id', countyId);
+        
+        if (hospitals.length === 0) {
+            document.getElementById('hospital-list').innerHTML = `
+                <div class="text-center text-muted">
+                    <p>No hospitals found in ${countyName} County.</p>
+                    <button class="btn btn-secondary mt-md" onclick="history.back()">
+                        ← Back to Counties
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        // Update count
+        document.getElementById('hospital-count').textContent = hospitals.length;
+        
+        // Add markers to map
+        hospitalLayer = MapUtils.addHospitalMarkers(
+            map, 
+            hospitals, 
+            handleHospitalClick
+        );
+        
+        // Populate sidebar
+        renderHospitalList(hospitals);
+    }
+    
+    // =============================================
+    // HOSPITAL SELECTION HANDLER
+    // =============================================
+    
+    function handleHospitalClick(feature) {
+        const hospitalId = feature.properties['Facility ID'];
+        const hospitalName = feature.properties['Facility Name'];
+        
+        // Navigate to prediction form
+        StateManager.navigate('/page/prediction_form', {
+            county_id: countyId,
+            county_name: countyName,
+            hospital_id: hospitalId,
+            hospital_name: hospitalName
+        });
+    }
+    
+    // =============================================
+    // SIDEBAR HOSPITAL LIST
+    // =============================================
+    
+    function renderHospitalList(hospitals) {
+        const container = document.getElementById('hospital-list');
+        container.innerHTML = '';
+        
+        hospitals
+            .sort((a, b) => {
+                const nameA = a.properties['Facility Name'] || '';
+                const nameB = b.properties['Facility Name'] || '';
+                return nameA.localeCompare(nameB);
+            })
+            .forEach(feature => {
+                const hospitalName = feature.properties['Facility Name'];
+                const hospitalId = feature.properties['Facility ID'];
+                
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.setAttribute('role', 'listitem');
+                
+                div.innerHTML = `
+                    <div class="list-item-title">${hospitalName}</div>
+                    <div class="list-item-meta">ID: ${hospitalId}</div>
+                `;
+                
+                div.onclick = () => {
+                    // Zoom to hospital on map
+                    const coords = feature.geometry.coordinates;
+                    map.setView([coords[1], coords[0]], 15);
+                    
+                    // Navigate after brief delay
+                    setTimeout(() => {
+                        handleHospitalClick(feature);
+                    }, 300);
+                };
+                
+                container.appendChild(div);
+            });
+    }
+    
+    // =============================================
+    // INITIALIZE
+    // =============================================
+    
+    initMap();
+</script>
+
+</body>
+</html>

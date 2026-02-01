@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital LOS Prediction - Select County</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/assets/css/base.css">
+    
+    <style>
+        /* Page-specific styles */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .county-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #1a202c;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            pointer-events: none;
+        }
+        
+        .search-box {
+            margin-bottom: var(--space-lg);
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: var(--space-md);
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            font-size: var(--font-size-base);
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+    <h1 class="app-title">Hospital Length of Stay Prediction</h1>
+    <p class="app-subtitle">New York State Healthcare Analytics Platform</p>
+</header>
+
+<!-- MAIN CONTAINER -->
+<div class="app-container">
+    
+    <!-- LEFT SIDEBAR: County List -->
+    <aside class="sidebar">
+        <h2 class="sidebar-title">Select County</h2>
+        
+        <!-- Search box -->
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="county-search" 
+                class="search-input"
+                placeholder="Search counties..."
+                aria-label="Search counties"
+            />
+        </div>
+        
+        <!-- County list -->
+        <div id="county-list" role="list"></div>
+    </aside>
+    
+    <!-- RIGHT: Interactive Map -->
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+    
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Utilities -->
+<script src="/assets/js/stateManager.js"></script>
+<script src="/assets/js/mapUtils.js"></script>
+
+<!-- Page Logic -->
+<script>
+    // =============================================
+    // INITIALIZE MAP
+    // =============================================
+    
+    let map, countiesLayer;
+    let allCounties = []; // Store for search filtering
+    
+    async function initMap() {
+        const loading = MapUtils.showLoading('map', 'Loading New York counties...');
+        
+        try {
+            // Create map
+            map = MapUtils.createMap('map', [43.0, -75.0], 7);
+            
+            // Load county boundaries
+            const countyData = await MapUtils.fetchGeoJSON('assets/data/ny_counties.geojson');
+            
+            // Store counties for search
+            allCounties = countyData.features;
+            
+            // Add county layer with interactions
+            countiesLayer = MapUtils.addCountyLayer(map, countyData, handleCountyClick);
+            
+            // Populate sidebar list
+            renderCountyList(allCounties);
+            
+            MapUtils.hideLoading();
+            
+        } catch (error) {
+            console.error('Map initialization failed:', error);
+            MapUtils.hideLoading();
+        }
+    }
+    
+    // =============================================
+    // COUNTY SELECTION HANDLER
+    // =============================================
+    
+    function handleCountyClick(feature, layer) {
+        const countyId = feature.properties.gnis_id;
+        const countyName = feature.properties.name;
+        
+        // Zoom to county
+        map.fitBounds(layer.getBounds());
+        
+        // Navigate to hospital selection page
+        StateManager.navigate('/page/county_map', {
+            county_id: countyId,
+            county_name: countyName
+        });
+    }
+    
+    // =============================================
+    // SIDEBAR COUNTY LIST
+    // =============================================
+    
+    function renderCountyList(counties) {
+        const container = document.getElementById('county-list');
+        container.innerHTML = '';
+        
+        if (counties.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center">No counties found</p>';
+            return;
+        }
+        
+        counties
+            .sort((a, b) => a.properties.name.localeCompare(b.properties.name))
+            .forEach(feature => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.setAttribute('role', 'listitem');
+                
+                div.innerHTML = `
+                    <div class="list-item-title">${feature.properties.name} County</div>
+                    <div class="list-item-meta">Click to view hospitals</div>
+                `;
+                
+                div.onclick = () => {
+                    const layer = findLayerByFeature(feature);
+                    handleCountyClick(feature, layer);
+                };
+                
+                container.appendChild(div);
+            });
+    }
+    
+    // Helper: Find Leaflet layer by feature
+    function findLayerByFeature(feature) {
+        let targetLayer = null;
+        
+        countiesLayer.eachLayer(layer => {
+            if (layer.feature.properties.gnis_id === feature.properties.gnis_id) {
+                targetLayer = layer;
+            }
+        });
+        
+        return targetLayer;
+    }
+    
+    // =============================================
+    // SEARCH FUNCTIONALITY
+    // =============================================
+    
+    document.getElementById('county-search').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        
+        if (query === '') {
+            renderCountyList(allCounties);
+            return;
+        }
+        
+        const filtered = allCounties.filter(feature => 
+            feature.properties.name.toLowerCase().includes(query)
+        );
+        
+        renderCountyList(filtered);
+    });
+    
+    // =============================================
+    // INITIALIZE ON PAGE LOAD
+    // =============================================
+    
+    initMap();
+</script>
+
+</body>
+</html>
