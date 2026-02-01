@@ -112,18 +112,41 @@
 
 <!-- HEADER -->
 <header class="app-header">
-    <h1 class="app-title">Prediction Results</h1>
+    <h class="app-title">Prediction Results</h>
     <div class="breadcrumb" id="breadcrumb"></div>
 </header>
 
 <!-- MAIN CONTENT -->
 <main class="results-container">
     
+    
     <!-- Main Prediction Display -->
     <div class="prediction-display">
         <div class="prediction-label">Predicted Length of Stay</div>
+        
+        <!-- Primary Display -->
         <div class="prediction-value" id="predicted-los">--</div>
-        <div class="prediction-label">days</div>
+        
+        <!-- Secondary Display Toggle -->
+        <div class="prediction-secondary">
+            <button 
+                id="toggle-format" 
+                class="format-toggle-btn"
+                style="
+                    background: rgba(255,255,255,0.2);
+                    border: 1px solid rgba(255,255,255,0.4);
+                    color: white;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    margin-top: var(--space-sm);
+                "
+            >
+                Show as Hours
+            </button>
+            <div id="alternate-format" style="margin-top: var(--space-xs); font-size: 14px; opacity: 0.9;"></div>
+        </div>
         
         <div class="confidence-bar">
             <div style="font-size: var(--font-size-sm); opacity: 0.9;">
@@ -131,6 +154,7 @@
             </div>
             <div class="confidence-range">
                 <span id="confidence-low">--</span>
+                <span>to</span>
                 <span id="confidence-high">--</span>
             </div>
         </div>
@@ -237,6 +261,50 @@
 <script src="/assets/js/stateManager.js"></script>
 
 <script>
+
+    // =============================================
+    // FORMAT TOGGLE FUNCTIONALITY
+    // =============================================
+
+    let currentFormat = 'auto';
+    const formatOptions = ['auto', 'hours', 'days-hours', 'days-only'];
+    const formatLabels = {
+        'auto': 'Show as Hours',
+        'hours': 'Show as Days+Hours',
+        'days-hours': 'Show Days Only',
+        'days-only': 'Show Auto Format'
+    };
+
+    document.getElementById('toggle-format').addEventListener('click', () => {
+        // Cycle through formats
+        const currentIndex = formatOptions.indexOf(currentFormat);
+        currentFormat = formatOptions[(currentIndex + 1) % formatOptions.length];
+        
+        // Update display
+        const newFormatted = TimeFormatter.formatLOS(apiResult.predicted_los, currentFormat);
+        document.getElementById('predicted-los').textContent = newFormatted;
+        
+        const newConfidence = TimeFormatter.formatConfidenceInterval(
+            apiResult.confidence_interval, 
+            currentFormat
+        );
+        document.getElementById('confidence-low').textContent = newConfidence.low;
+        document.getElementById('confidence-high').textContent = newConfidence.high;
+        
+        // Update button label
+        document.getElementById('toggle-format').textContent = 
+            formatLabels[currentFormat];
+        
+        // Show alternate format
+        const allFormats = TimeFormatter.getFormattedOptions(apiResult.predicted_los);
+        const alternates = Object.entries(allFormats)
+            .filter(([key]) => key !== currentFormat && key !== 'raw')
+            .map(([key, val]) => val)
+            .join(' • ');
+        
+        document.getElementById('alternate-format').textContent = alternates;
+    });
+
     // =============================================
     // LOAD PREDICTION DATA FROM CACHE
     // =============================================
@@ -267,18 +335,77 @@
     // DISPLAY PREDICTION RESULTS
     // =============================================
     
-    // Main prediction value
-    document.getElementById('predicted-los').textContent = 
-        apiResult.predicted_los || '--';  // ✅ Fixed: removed underscore
+    // // Main prediction value
+    // document.getElementById('predicted-los').textContent = 
+    //     apiResult.predicted_los || '--';  // ✅ Fixed: removed underscore
     
+    // // Confidence interval
+    // if (apiResult.confidence_interval && apiResult.confidence_interval.length === 2) {
+    //     document.getElementById('confidence-low').textContent = 
+    //         `${apiResult.confidence_interval[0]} days`;
+    //     document.getElementById('confidence-high').textContent = 
+    //         `${apiResult.confidence_interval[1]} days`;
+    // }
+    
+    
+    // =============================================
+    // DISPLAY PREDICTION RESULTS
+    // =============================================
+
+    // Get formatted time values
+    const losFormatted = TimeFormatter.formatLOS(apiResult.predicted_los, 'auto');
+    const confidenceFormatted = TimeFormatter.formatConfidenceInterval(
+        apiResult.confidence_interval, 
+        'auto'
+    );
+
+    // Also get breakdown for additional context
+    const losBreakdown = TimeFormatter.breakdownDaysAndHours(apiResult.predicted_los);
+
+    // Main prediction value - PRIMARY DISPLAY
+    document.getElementById('predicted-los').textContent = losFormatted;
+
     // Confidence interval
-    if (apiResult.confidence_interval && apiResult.confidence_interval.length === 2) {
-        document.getElementById('confidence-low').textContent = 
-            `${apiResult.confidence_interval[0]} days`;
-        document.getElementById('confidence-high').textContent = 
-            `${apiResult.confidence_interval[1]} days`;
-    }
-    
+    document.getElementById('confidence-low').textContent = confidenceFormatted.low;
+    document.getElementById('confidence-high').textContent = confidenceFormatted.high;
+
+    // =============================================
+    // ADD DETAILED BREAKDOWN (OPTIONAL)
+    // =============================================
+
+    // Add a detailed breakdown below the main prediction
+    // This gives clinicians both formats
+    const predictionDisplay = document.querySelector('.prediction-display');
+
+    const breakdownDiv = document.createElement('div');
+    breakdownDiv.className = 'prediction-breakdown';
+    breakdownDiv.style.cssText = `
+        margin-top: var(--space-lg);
+        padding: var(--space-md);
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        font-size: var(--font-size-sm);
+    `;
+
+    breakdownDiv.innerHTML = `
+        <div style="opacity: 0.9; margin-bottom: var(--space-xs);">
+            <strong>Detailed Breakdown:</strong>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); opacity: 0.85;">
+            <div>
+                <div style="font-size: 11px; opacity: 0.8;">Total Hours:</div>
+                <div style="font-weight: 600;">${Math.round(losBreakdown.totalHours)} hours</div>
+            </div>
+            <div>
+                <div style="font-size: 11px; opacity: 0.8;">Decimal Days:</div>
+                <div style="font-weight: 600;">${apiResult.predicted_los.toFixed(2)} days</div>
+            </div>
+        </div>
+    `;
+
+    predictionDisplay.appendChild(breakdownDiv);
+
+
     // =============================================
     // DISPLAY HOSPITAL CONTEXT
     // =============================================

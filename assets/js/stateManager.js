@@ -216,5 +216,131 @@ const StateManager = {
     }
 };
 
+
+
 // Make globally available
 window.StateManager = StateManager;
+
+
+
+/**
+ * TIME FORMATTING UTILITIES
+ * Convert decimal days to human-readable formats
+ */
+const TimeFormatter = {
+    
+    /**
+     * Convert decimal days to hours
+     * @param {number} days - Decimal days (e.g., 2.47)
+     * @returns {number} Total hours
+     */
+    daysToHours(days) {
+        return days * 24;
+    },
+    
+    /**
+     * Convert decimal days to days + hours breakdown
+     * @param {number} decimalDays - Decimal days (e.g., 2.47)
+     * @returns {Object} { days: int, hours: int, totalHours: float }
+     */
+    breakdownDaysAndHours(decimalDays) {
+        const totalHours = decimalDays * 24;
+        const wholeDays = Math.floor(decimalDays);
+        const remainingHours = Math.round((decimalDays - wholeDays) * 24);
+        
+        return {
+            days: wholeDays,
+            hours: remainingHours,
+            totalHours: totalHours,
+            originalDays: decimalDays
+        };
+    },
+    
+    /**
+     * Format decimal days for clinical display
+     * @param {number} decimalDays - Decimal days (e.g., 2.47)
+     * @param {string} format - 'auto', 'hours', 'days-hours', 'days-only'
+     * @returns {string} Formatted string
+     */
+    formatLOS(decimalDays, format = 'auto') {
+        if (!decimalDays || isNaN(decimalDays)) {
+            return '--';
+        }
+        
+        const breakdown = this.breakdownDaysAndHours(decimalDays);
+        
+        switch (format) {
+            case 'hours':
+                // Always show as hours (e.g., "59 hours")
+                return `${Math.round(breakdown.totalHours)} hours`;
+            
+            case 'days-hours':
+                // Always show as days + hours (e.g., "2 days, 11 hours")
+                if (breakdown.hours === 0) {
+                    return `${breakdown.days} day${breakdown.days !== 1 ? 's' : ''}`;
+                }
+                return `${breakdown.days} day${breakdown.days !== 1 ? 's' : ''}, ${breakdown.hours} hour${breakdown.hours !== 1 ? 's' : ''}`;
+            
+            case 'days-only':
+                // Round to nearest day (e.g., "2 days")
+                const roundedDays = Math.round(decimalDays);
+                return `${roundedDays} day${roundedDays !== 1 ? 's' : ''}`;
+            
+            case 'auto':
+            default:
+                // Smart formatting based on length
+                if (decimalDays < 1) {
+                    // Less than 1 day → show hours only
+                    return `${Math.round(breakdown.totalHours)} hours`;
+                } else if (decimalDays < 2 && breakdown.hours > 0) {
+                    // 1-2 days with significant hours → show breakdown
+                    return `${breakdown.days} day, ${breakdown.hours} hours`;
+                } else if (breakdown.hours >= 6) {
+                    // 2+ days with 6+ hours → show breakdown
+                    return `${breakdown.days} days, ${breakdown.hours} hours`;
+                } else {
+                    // Otherwise round to nearest day
+                    const roundedDays = Math.round(decimalDays);
+                    return `${roundedDays} day${roundedDays !== 1 ? 's' : ''}`;
+                }
+        }
+    },
+    
+    /**
+     * Format confidence interval
+     * @param {Array<number>} interval - [low, high] in decimal days
+     * @param {string} format - Same as formatLOS
+     * @returns {Object} { low: string, high: string }
+     */
+    formatConfidenceInterval(interval, format = 'auto') {
+        if (!interval || interval.length !== 2) {
+            return { low: '--', high: '--' };
+        }
+        
+        return {
+            low: this.formatLOS(interval[0], format),
+            high: this.formatLOS(interval[1], format)
+        };
+    },
+    
+    /**
+     * Create detailed breakdown for display
+     * @param {number} decimalDays - Decimal days
+     * @returns {Object} Multiple format options
+     */
+    getFormattedOptions(decimalDays) {
+        const breakdown = this.breakdownDaysAndHours(decimalDays);
+        
+        return {
+            decimal: `${decimalDays.toFixed(2)} days`,
+            hoursOnly: `${Math.round(breakdown.totalHours)} hours`,
+            daysHours: this.formatLOS(decimalDays, 'days-hours'),
+            daysOnly: this.formatLOS(decimalDays, 'days-only'),
+            auto: this.formatLOS(decimalDays, 'auto'),
+            raw: breakdown
+        };
+    }
+};
+
+// Make globally available
+window.TimeFormatter = TimeFormatter;
