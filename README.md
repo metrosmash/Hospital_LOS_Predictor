@@ -131,7 +131,7 @@ gunicorn==21.2.0  # For production deployment
 - Recommended: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 
 ---
-
+![Dashboard prediction_result Preview](assets/screenshots/prediction_result.png)
 ## ⚙️ Setup & Configuration
 
 ### 1. Clone the Repository
