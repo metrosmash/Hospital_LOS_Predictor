@@ -21,6 +21,11 @@ from sklearn.preprocessing import OneHotEncoder
 from cleaning_script import HospitalDataCleaner ,mdc_code_mapping
 
 
+import cleaning_script
+import sys
+# Manually tell Python that 'HospitalDataCleaner' can be found here
+sys.modules['__main__'].HospitalDataCleaner = cleaning_script.HospitalDataCleaner
+
 # Azure App Service uses PORT environment variable
 PORT = int(os.environ.get('PORT', 8000))
 DEBUG = os.environ.get('FLASK_ENV') != 'production'
