@@ -68,8 +68,8 @@ try:
     mdc_conversion_mapping = joblib.load(os.path.join(PKL_DIR, 'mdc_conversion_mapping.pkl'))
     logger.info(f"✓ mdc conversion mapping  loaded: {len(mdc_conversion_mapping)} mappings")
 
-    cleaning_pipeline = joblib.load(os.path.join(PKL_DIR, 'hospital_data_cleanerv1.pkl'))
-    logger.info(f"✓ Cleaning pipeline  loaded ")
+    # cleaning_pipeline = joblib.load(os.path.join(PKL_DIR, 'hospital_data_cleanerv1.pkl'))
+    # logger.info(f"✓ Cleaning pipeline  loaded ")
     
     MODEL_LOADED = True
     
