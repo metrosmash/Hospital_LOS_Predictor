@@ -21,6 +21,10 @@ from sklearn.preprocessing import OneHotEncoder
 from cleaning_script import HospitalDataCleaner ,mdc_code_mapping
 
 
+# Azure App Service uses PORT environment variable
+PORT = int(os.environ.get('PORT', 8000))
+
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
@@ -33,33 +37,38 @@ logger = logging.getLogger(__name__)
 
 
 
+# Get absolute path to project directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PKL_DIR = os.path.join(BASE_DIR, 'assets', 'pkl_files')
+
+
 # ============================================
 # LOAD MODEL AND PREPROCESSORS
 # ============================================
 
 try:
     # Load your trained model
-    model = joblib.load('assets/pkl_files/xgb_modelv1.pkl')
+    model = joblib.load(os.path.join(PKL_DIR, 'xgb_modelv1.pkl'))
     logger.info("✓ Model loaded successfully")
 
-    xgb_hospital_pipeline = joblib.load('assets/pkl_files/xgb_hospital_full_pipeline.pkl')
+    xgb_hospital_pipeline = joblib.load(os.path.join(PKL_DIR, 'xgb_hospital_full_pipeline.pkl'))
     logger.info("✓ Model-cleaner pipeline loaded successfully")
     
     # Load column names and order
-    column_names = joblib.load('assets/pkl_files/feature_names.pkl')
+    column_names = joblib.load(os.path.join(PKL_DIR, 'feature_names.pkl'))
     logger.info(f"✓ Column names loaded: {len(column_names)} columns expected")
     
     # Load mapping files
-    mdc_mapping = joblib.load('assets/pkl_files/mdc_mapping.pkl')
+    mdc_mapping = joblib.load(os.path.join(PKL_DIR, 'mdc_mapping.pkl'))
     logger.info(f"✓ MDC mapping loaded: {len(mdc_mapping)} mappings")
     
-    severity_mapping = joblib.load('assets/pkl_files/severity_mapping.pkl')
+    severity_mapping = joblib.load(os.path.join(PKL_DIR, 'severity_mapping.pkl'))
     logger.info(f"✓ Severity mapping loaded: {len(severity_mapping)} mappings")
 
-    mdc_conversion_mapping = joblib.load('assets/pkl_files/mdc_conversion_mapping.pkl')
+    mdc_conversion_mapping = joblib.load(os.path.join(PKL_DIR, 'mdc_conversion_mapping.pkl'))
     logger.info(f"✓ mdc conversion mapping  loaded: {len(mdc_conversion_mapping)} mappings")
 
-    cleaning_pipeline = joblib.load('assets/pkl_files/hospital_data_cleanerv1.pkl')
+    cleaning_pipeline = joblib.load(os.path.join(PKL_DIR, 'hospital_data_cleanerv1.pkl'))
     logger.info(f"✓ Cleaning pipeline  loaded ")
     
     MODEL_LOADED = True
@@ -620,7 +629,12 @@ if __name__ == '__main__':
     #     port=5000
     # )
     
-    # Production: Use gunicorn
-    gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 app:app
+    # For local development only
+    # Azure will use gunicorn via startup.txt
+    app.run(
+        debug=False,  # Set to False for production
+        host='0.0.0.0',
+        port=PORT  # Azure uses environment variable PORT
+    )
 
     
