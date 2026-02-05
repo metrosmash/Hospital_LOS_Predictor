@@ -23,7 +23,7 @@ from cleaning_script import HospitalDataCleaner ,mdc_code_mapping
 
 # Azure App Service uses PORT environment variable
 PORT = int(os.environ.get('PORT', 8000))
-
+DEBUG = os.environ.get('FLASK_ENV') != 'production'
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
