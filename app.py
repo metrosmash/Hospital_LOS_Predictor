@@ -36,6 +36,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+
 # Get absolute path to project directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PKL_DIR = os.path.join(BASE_DIR, 'assets', 'pkl_files')
