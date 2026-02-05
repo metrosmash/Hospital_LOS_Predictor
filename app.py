@@ -614,11 +614,13 @@ if __name__ == '__main__':
         logger.warning("✗ Model loading failed - API will return errors")
     
     # Development server
-    app.run(
-        debug=True,
-        host='0.0.0.0',
-        port=5000
-    )
+    # app.run(
+    #     debug=True,
+    #     host='0.0.0.0',
+    #     port=5000
+    # )
     
     # Production: Use gunicorn
-    # gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 app:app
+    gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 app:app
+
+    
