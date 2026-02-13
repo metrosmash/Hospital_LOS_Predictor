@@ -115,7 +115,7 @@ const StateManager = {
      */
     getBreadcrumbs() {
         const crumbs = [
-            { label: 'Counties', page: 'index.html', active: false }
+            {label: "Counties", page: "/", active: false}
         ];
         
         const countyName = this.getParam('county_name');
@@ -124,7 +124,7 @@ const StateManager = {
         if (countyName) {
             crumbs.push({
                 label: `${countyName} County`,
-                page: `county_map.html?county_id=${this.getParam('county_id')}&county_name=${countyName}`,
+                page: `/page/county_map?county_id=${this.getParam('county_id')}&county_name=${countyName}`,
                 active: !hospitalName
             });
         }
@@ -132,7 +132,7 @@ const StateManager = {
         if (hospitalName) {
             crumbs.push({
                 label: hospitalName,
-                page: `prediction_form.html?${window.location.search.slice(1)}`,
+                page: `/page/prediction_form?${window.location.search.slice(1)}`,
                 active: true
             });
         }

@@ -5,120 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Results</title>
     
-    <link rel="stylesheet" href="/assets/css/base.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: var(--color-bg-alt);
-        }
-        
-        .results-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: var(--space-xl);
-        }
-        
-        .result-card {
-            background: white;
-            padding: var(--space-xl);
-            border-radius: 8px;
-            margin-bottom: var(--space-lg);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .prediction-display {
-            text-align: center;
-            padding: var(--space-2xl);
-            background: linear-gradient(135deg, #2c5282 0%, #48bb78 100%);
-            border-radius: 8px;
-            color: white;
-            margin-bottom: var(--space-xl);
-        }
-        
-        .prediction-value {
-            font-size: 64px;
-            font-weight: 700;
-            margin: var(--space-md) 0;
-        }
-        
-        .prediction-label {
-            font-size: var(--font-size-lg);
-            opacity: 0.9;
-        }
-        
-        .confidence-bar {
-            margin-top: var(--space-lg);
-            padding: var(--space-lg);
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 6px;
-        }
-        
-        .confidence-range {
-            display: flex;
-            justify-content: space-between;
-            margin-top: var(--space-sm);
-            font-size: var(--font-size-sm);
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: var(--space-lg);
-        }
-        
-        .info-item {
-            padding: var(--space-md);
-            background: var(--color-bg-alt);
-            border-radius: 6px;
-        }
-        
-        .info-item-label {
-            font-size: var(--font-size-sm);
-            color: var(--color-text-muted);
-            margin-bottom: var(--space-xs);
-        }
-        
-        .info-item-value {
-            font-weight: 600;
-            font-size: var(--font-size-lg);
-            color: var(--color-text);
-        }
-        
-        .risk-factors {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .risk-factor {
-            padding: var(--space-md);
-            margin-bottom: var(--space-sm);
-            background: #fff5f5;
-            border-left: 4px solid var(--color-warning);
-            border-radius: 4px;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: var(--space-md);
-            margin-top: var(--space-xl);
-        }
-    </style>
+    <!-- Lucide Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css">
+    
+    <link rel="stylesheet" href="/assets/css/base.css">
 </head>
 <body>
 
 <!-- HEADER -->
 <header class="app-header">
-    <h class="app-title">Prediction Results</h>
+    <h1 class="app-title">📊 Prediction Results</h1>
     <div class="breadcrumb" id="breadcrumb"></div>
 </header>
 
 <!-- MAIN CONTENT -->
 <main class="results-container">
-    
     
     <!-- Main Prediction Display -->
     <div class="prediction-display">
@@ -127,25 +33,20 @@
         <!-- Primary Display -->
         <div class="prediction-value" id="predicted-los">--</div>
         
-        <!-- Secondary Display Toggle -->
+        <!-- Format Toggle -->
         <div class="prediction-secondary">
             <button 
                 id="toggle-format" 
-                class="format-toggle-btn"
+                class="btn btn-secondary"
                 style="
-                    background: rgba(255,255,255,0.2);
-                    border: 1px solid rgba(255,255,255,0.4);
-                    color: white;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    cursor: pointer;
-                    margin-top: var(--space-sm);
+                    margin-top: var(--space-md);
+                    padding: var(--space-sm) var(--space-md);
+                    font-size: var(--font-size-sm);
                 "
             >
                 Show as Hours
             </button>
-            <div id="alternate-format" style="margin-top: var(--space-xs); font-size: 14px; opacity: 0.9;"></div>
+            <div id="alternate-format" style="margin-top: var(--space-sm); font-size: var(--font-size-sm); opacity: 0.9;"></div>
         </div>
         
         <div class="confidence-bar">
@@ -162,7 +63,10 @@
     
     <!-- Hospital Context -->
     <div class="result-card">
-        <h2 style="margin-bottom: var(--space-lg);">Hospital Context</h2>
+        <h2 style="margin-bottom: var(--space-lg);">
+            <i class="lucide lucide-hospital" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i>
+            Hospital Context
+        </h2>
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-item-label">Hospital</div>
@@ -181,7 +85,10 @@
     
     <!-- Patient Factors -->
     <div class="result-card">
-        <h2 style="margin-bottom: var(--space-lg);">Patient Information</h2>
+        <h2 style="margin-bottom: var(--space-lg);">
+            <i class="lucide lucide-user" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i>
+            Patient Information
+        </h2>
         <div class="info-grid">
             <div class="info-item">
                 <div class="info-item-label">Age Group</div>
@@ -236,7 +143,10 @@
     
     <!-- Risk Factors -->
     <div class="result-card">
-        <h2 style="margin-bottom: var(--space-lg);">Contributing Factors</h2>
+        <h2 style="margin-bottom: var(--space-lg);">
+            <i class="lucide lucide-alert-triangle" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i>
+            Contributing Factors
+        </h2>
         <ul class="risk-factors" id="risk-factors">
             <!-- Populated by JavaScript -->
         </ul>
@@ -245,13 +155,16 @@
     <!-- Actions -->
     <div class="action-buttons">
         <button class="btn btn-primary" onclick="window.print()">
+            <i class="lucide lucide-printer" style="width: 18px; height: 18px;"></i>
             Print Report
         </button>
         <button class="btn btn-secondary" onclick="newPrediction()">
+            <i class="lucide lucide-plus-circle" style="width: 18px; height: 18px;"></i>
             New Prediction
         </button>
         <button class="btn btn-secondary" onclick="history.back()">
-            ← Back to Form
+            <i class="lucide lucide-arrow-left" style="width: 18px; height: 18px;"></i>
+            Back to Form
         </button>
     </div>
     
@@ -261,7 +174,46 @@
 <script src="/assets/js/stateManager.js"></script>
 
 <script>
-
+    // =============================================
+    // LOAD PREDICTION DATA FROM CACHE
+    // =============================================
+    
+    console.log('Results page loaded');
+    
+    const cachedData = StateManager.getCachedPrediction();
+    
+    console.log('Cached data:', cachedData);
+    
+    if (!cachedData) {
+        console.error('No cached data found!');
+        StateManager.showError(
+            'No prediction data found. Please complete the form first.',
+            '/'
+        );
+        throw new Error('No prediction data');
+    }
+    
+    if (!cachedData.result) {
+        console.error('Cached data exists but no result:', cachedData);
+        StateManager.showError(
+            'Prediction result is missing. Please try submitting the form again.',
+            '/page/prediction_form'
+        );
+        throw new Error('No prediction result');
+    }
+    
+    const inputData = cachedData.input;   // Original form submission
+    const apiResult = cachedData.result;  // API response
+    
+    console.log('Input data:', inputData);
+    console.log('API result:', apiResult);
+    
+    // =============================================
+    // UPDATE BREADCRUMBS
+    // =============================================
+    
+    StateManager.renderBreadcrumbs();
+    
     // =============================================
     // FORMAT TOGGLE FUNCTIONALITY
     // =============================================
@@ -292,8 +244,7 @@
         document.getElementById('confidence-high').textContent = newConfidence.high;
         
         // Update button label
-        document.getElementById('toggle-format').textContent = 
-            formatLabels[currentFormat];
+        document.getElementById('toggle-format').textContent = formatLabels[currentFormat];
         
         // Show alternate format
         const allFormats = TimeFormatter.getFormattedOptions(apiResult.predicted_los);
@@ -304,49 +255,6 @@
         
         document.getElementById('alternate-format').textContent = alternates;
     });
-
-    // =============================================
-    // LOAD PREDICTION DATA FROM CACHE
-    // =============================================
-    
-    const cachedData = StateManager.getCachedPrediction();
-    
-    if (!cachedData || !cachedData.result) {
-        StateManager.showError(
-            'No prediction data found. Please complete the form first.',
-            '/page/prediction_form'
-        );
-        throw new Error('No prediction data');
-    }
-    
-    const inputData = cachedData.input;   // Original form submission
-    const apiResult = cachedData.result;  // ✅ Fixed: was 'results'
-    
-    console.log('Cached data:', cachedData);
-    console.log('API result:', apiResult);
-    
-    // =============================================
-    // UPDATE BREADCRUMBS
-    // =============================================
-    
-    StateManager.renderBreadcrumbs();
-    
-    // =============================================
-    // DISPLAY PREDICTION RESULTS
-    // =============================================
-    
-    // // Main prediction value
-    // document.getElementById('predicted-los').textContent = 
-    //     apiResult.predicted_los || '--';  // ✅ Fixed: removed underscore
-    
-    // // Confidence interval
-    // if (apiResult.confidence_interval && apiResult.confidence_interval.length === 2) {
-    //     document.getElementById('confidence-low').textContent = 
-    //         `${apiResult.confidence_interval[0]} days`;
-    //     document.getElementById('confidence-high').textContent = 
-    //         `${apiResult.confidence_interval[1]} days`;
-    // }
-    
     
     // =============================================
     // DISPLAY PREDICTION RESULTS
@@ -359,82 +267,38 @@
         'auto'
     );
 
-    // Also get breakdown for additional context
-    const losBreakdown = TimeFormatter.breakdownDaysAndHours(apiResult.predicted_los);
-
     // Main prediction value - PRIMARY DISPLAY
     document.getElementById('predicted-los').textContent = losFormatted;
 
     // Confidence interval
     document.getElementById('confidence-low').textContent = confidenceFormatted.low;
     document.getElementById('confidence-high').textContent = confidenceFormatted.high;
-
-    // =============================================
-    // ADD DETAILED BREAKDOWN (OPTIONAL)
-    // =============================================
-
-    // Add a detailed breakdown below the main prediction
-    // This gives clinicians both formats
-    const predictionDisplay = document.querySelector('.prediction-display');
-
-    const breakdownDiv = document.createElement('div');
-    breakdownDiv.className = 'prediction-breakdown';
-    breakdownDiv.style.cssText = `
-        margin-top: var(--space-lg);
-        padding: var(--space-md);
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        font-size: var(--font-size-sm);
-    `;
-
-    breakdownDiv.innerHTML = `
-        <div style="opacity: 0.9; margin-bottom: var(--space-xs);">
-            <strong>Detailed Breakdown:</strong>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); opacity: 0.85;">
-            <div>
-                <div style="font-size: 11px; opacity: 0.8;">Total Hours:</div>
-                <div style="font-weight: 600;">${Math.round(losBreakdown.totalHours)} hours</div>
-            </div>
-            <div>
-                <div style="font-size: 11px; opacity: 0.8;">Decimal Days:</div>
-                <div style="font-weight: 600;">${apiResult.predicted_los.toFixed(2)} days</div>
-            </div>
-        </div>
-    `;
-
-    predictionDisplay.appendChild(breakdownDiv);
-
-
+    
     // =============================================
     // DISPLAY HOSPITAL CONTEXT
     // =============================================
     
-    document.getElementById('display-hospital').textContent = 
-        apiResult.metadata?.hospital_name || inputData.hospital_name || '--';
-    document.getElementById('display-county').textContent = 
-        apiResult.metadata?.county_name || inputData.county_name || '--';
+    const hospitalName = apiResult.metadata?.hospital_name || inputData.hospital_name || inputData['Facility Name'] || '--';
+    const countyName = apiResult.metadata?.county_name || inputData.county_name || inputData['Hospital County'] || '--';
+    
+    console.log('Displaying hospital:', hospitalName);
+    console.log('Displaying county:', countyName);
+    
+    document.getElementById('display-hospital').textContent = hospitalName;
+    document.getElementById('display-county').textContent = countyName;
     
     // =============================================
     // DISPLAY PATIENT INFORMATION
     // =============================================
     
-    document.getElementById('display-age').textContent = 
-        inputData['Age Group'] || '--';
-    document.getElementById('display-gender').textContent = 
-        inputData['Gender'] || '--';
-    document.getElementById('display-race').textContent = 
-        inputData['Race'] || '--';
-    document.getElementById('display-ethnicity').textContent = 
-        inputData['Ethnicity'] || '--';
-    document.getElementById('display-insurance').textContent = 
-        inputData['Payment Typology 1'] || '--';
-    document.getElementById('display-admission').textContent = 
-        inputData['Type of Admission'] || '--';
-    document.getElementById('display-diagnosis').textContent = 
-        inputData['APR MDC Description'] || '--';
-    document.getElementById('display-medsurg').textContent = 
-        inputData['APR Medical Surgical Description'] || '--';
+    document.getElementById('display-age').textContent = inputData['Age Group'] || '--';
+    document.getElementById('display-gender').textContent = inputData['Gender'] || '--';
+    document.getElementById('display-race').textContent = inputData['Race'] || '--';
+    document.getElementById('display-ethnicity').textContent = inputData['Ethnicity'] || '--';
+    document.getElementById('display-insurance').textContent = inputData['Payment Typology 1'] || '--';
+    document.getElementById('display-admission').textContent = inputData['Type of Admission'] || '--';
+    document.getElementById('display-diagnosis').textContent = inputData['APR MDC Description'] || '--';
+    document.getElementById('display-medsurg').textContent = inputData['APR Medical Surgical Description'] || '--';
     document.getElementById('display-emergency').textContent = 
         inputData['Emergency Department Indicator'] === 'Y' ? 'Yes' : 
         (inputData['Emergency Department Indicator'] === 'N' ? 'No' : '--');
@@ -505,6 +369,8 @@
         // Navigate back to county selection
         window.location.href = '/';
     }
+    
+    console.log('Results page fully loaded and rendered');
 </script>
 
 </body>

@@ -3,65 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hospital Length of Stay Prediction - New York State Healthcare Analytics Platform">
     <title>Hospital LOS Prediction - Select County</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css">
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/assets/css/base.css">
-    
-    <style>
-        /* Page-specific styles */
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .county-label {
-            font-size: 11px;
-            font-weight: bold;
-            color: #1a202c;
-            background: transparent;
-            border: none;
-            box-shadow: none;
-            pointer-events: none;
-        }
-        
-        .search-box {
-            margin-bottom: var(--space-lg);
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: var(--space-md);
-            border: 2px solid var(--color-border);
-            border-radius: 6px;
-            font-size: var(--font-size-base);
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-        }
-    </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header class="app-header">
-    <h class="app-title">Hospital Length of Stay Prediction</h>
-    <h1 class="app-subtitle">New York State Healthcare Analytics Platform</h1>
+    <div class="hero-content">
+        <h1 class="app-title">🏥 Hospital Length of Stay Prediction</h1>
+        <p class="app-subtitle">New York State Healthcare Analytics Platform</p>
+    </div>
 </header>
+
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+    <i class="lucide lucide-list"></i>
+    <span id="toggle-text">Show County List</span>
+</button>
 
 <!-- MAIN CONTAINER -->
 <div class="app-container">
     
     <!-- LEFT SIDEBAR: County List -->
-    <aside class="sidebar">
-        <h2 class="sidebar-title">Select County</h2>
+    <aside class="sidebar" id="sidebar-panel">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Select County</h2>
+            <p class="text-muted text-small">
+                Choose a county to explore hospitals and predict patient length of stay.
+            </p>
+            <div class="county-count" id="county-count-badge">
+                <i class="lucide lucide-map-pin" style="width: 14px; height: 14px;"></i>
+                <span id="total-counties">Loading...</span>
+            </div>
+        </div>
         
         <!-- Search box -->
         <div class="search-box">
@@ -69,7 +58,7 @@
                 type="text" 
                 id="county-search" 
                 class="search-input"
-                placeholder="Search counties..."
+                placeholder="🔍 Search counties..."
                 aria-label="Search counties"
             />
         </div>
@@ -95,6 +84,22 @@
 <!-- Page Logic -->
 <script>
     // =============================================
+    // MOBILE SIDEBAR TOGGLE
+    // =============================================
+    
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar-panel');
+        const toggleText = document.getElementById('toggle-text');
+        sidebar.classList.toggle('collapsed');
+        
+        if (sidebar.classList.contains('collapsed')) {
+            toggleText.textContent = 'Show County List';
+        } else {
+            toggleText.textContent = 'Show Map';
+        }
+    }
+
+    // =============================================
     // INITIALIZE MAP
     // =============================================
     
@@ -113,6 +118,9 @@
             
             // Store counties for search
             allCounties = countyData.features;
+            
+            // Update count badge
+            document.getElementById('total-counties').textContent = `${allCounties.length} Counties`;
             
             // Add county layer with interactions
             countiesLayer = MapUtils.addCountyLayer(map, countyData, handleCountyClick);
@@ -155,20 +163,27 @@
         container.innerHTML = '';
         
         if (counties.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center">No counties found</p>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <p>No counties found</p>
+                    <p class="text-small">Try a different search term</p>
+                </div>
+            `;
             return;
         }
         
         counties
             .sort((a, b) => a.properties.name.localeCompare(b.properties.name))
-            .forEach(feature => {
+            .forEach((feature, index) => {
                 const div = document.createElement('div');
-                div.className = 'list-item';
+                div.className = 'list-item animate-fade-in';
+                div.style.animationDelay = `${index * 30}ms`;
                 div.setAttribute('role', 'listitem');
                 
                 div.innerHTML = `
                     <div class="list-item-title">${feature.properties.name} County</div>
-                    <div class="list-item-meta">Click to view hospitals</div>
+                    <div class="list-item-meta">View hospitals & predict LOS</div>
                 `;
                 
                 div.onclick = () => {

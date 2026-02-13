@@ -5,74 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hospital Selection</title>
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css">
+    
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/assets/css/base.css">
-    
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--space-md);
-            margin-bottom: var(--space-lg);
-            padding: var(--space-md);
-            background: white;
-            border-radius: 6px;
-            border: 1px solid var(--color-border);
-        }
-        
-        .stat-item {
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: var(--font-size-xl);
-            font-weight: 700;
-            color: var(--color-primary);
-        }
-        
-        .stat-label {
-            font-size: var(--font-size-sm);
-            color: var(--color-text-muted);
-            margin-top: var(--space-xs);
-        }
-    </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header class="app-header">
-    <h class="app-title" id="page-title">Loading...</h>
+    <h1 class="app-title" id="page-title">Loading...</h1>
     <div class="breadcrumb" id="breadcrumb"></div>
 </header>
+
+<!-- Mobile Toggle -->
+<button class="mobile-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+    <i class="lucide lucide-list"></i>
+    <span id="toggle-text">Show Hospital List</span>
+</button>
 
 <!-- MAIN CONTAINER -->
 <div class="app-container">
     
     <!-- LEFT SIDEBAR -->
-    <aside class="sidebar">
-        <h2 class="sidebar-title">Hospitals</h2>
+    <aside class="sidebar" id="sidebar-panel">
+        <!-- Back button -->
+        <a href="/" class="back-button">
+            <i class="lucide lucide-arrow-left" style="width: 16px; height: 16px;"></i>
+            <span>All Counties</span>
+        </a>
         
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value" id="hospital-count">0</div>
-                <div class="stat-label">Hospitals</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="county-area">--</div>
-                <div class="stat-label">sq mi</div>
+        <!-- County info card -->
+        <div class="county-info-card">
+            <h3 id="county-title">Loading...</h3>
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="stat-value" id="hospital-count">0</div>
+                    <div class="stat-label">Hospitals</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="county-area">--</div>
+                    <div class="stat-label">sq mi</div>
+                </div>
             </div>
         </div>
+        
+        <h2 class="sidebar-title">Select Hospital</h2>
         
         <!-- Hospital list -->
         <div id="hospital-list" role="list"></div>
@@ -92,6 +79,22 @@
 
 <script>
     // =============================================
+    // MOBILE SIDEBAR TOGGLE
+    // =============================================
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar-panel');
+        const toggleText = document.getElementById('toggle-text');
+        sidebar.classList.toggle('collapsed');
+        
+        if (sidebar.classList.contains('collapsed')) {
+            toggleText.textContent = 'Show Hospital List';
+        } else {
+            toggleText.textContent = 'Show Map';
+        }
+    }
+
+    // =============================================
     // VALIDATE REQUIRED STATE
     // =============================================
     
@@ -107,7 +110,8 @@
     // UPDATE PAGE TITLE & BREADCRUMBS
     // =============================================
     
-    document.getElementById('page-title').textContent = `${countyName} County Hospitals`;
+    document.getElementById('page-title').textContent = `🏥 ${countyName} County Hospitals`;
+    document.getElementById('county-title').textContent = `${countyName} County`;
     StateManager.renderBreadcrumbs();
     
     // =============================================
@@ -159,10 +163,11 @@
         // Add county boundary
         countyLayer = L.geoJSON(countyFeature, {
             style: {
-                color: '#2c5282',
-                weight: 2,
-                fillOpacity: 0.1,
-                fillColor: '#edf2f7'
+                color: '#1e3a5f',
+                weight: 3,
+                fillOpacity: 0.08,
+                fillColor: '#0d9488',
+                dashArray: '5, 5'
             }
         }).addTo(map);
         
@@ -189,10 +194,12 @@
         
         if (hospitals.length === 0) {
             document.getElementById('hospital-list').innerHTML = `
-                <div class="text-center text-muted">
-                    <p>No hospitals found in ${countyName} County.</p>
-                    <button class="btn btn-secondary mt-md" onclick="history.back()">
-                        ← Back to Counties
+                <div class="no-hospitals">
+                    <div class="no-hospitals-icon">🏥</div>
+                    <p class="text-muted">No hospitals found in ${countyName} County.</p>
+                    <button class="btn btn-secondary mt-lg" onclick="history.back()">
+                        <i class="lucide lucide-arrow-left" style="width: 16px; height: 16px;"></i>
+                        Back to Counties
                     </button>
                 </div>
             `;
@@ -244,17 +251,19 @@
                 const nameB = b.properties['Facility Name'] || '';
                 return nameA.localeCompare(nameB);
             })
-            .forEach(feature => {
+            .forEach((feature, index) => {
                 const hospitalName = feature.properties['Facility Name'];
                 const hospitalId = feature.properties['Facility ID'];
                 
                 const div = document.createElement('div');
-                div.className = 'list-item';
+                div.className = 'list-item animate-fade-in';
+                div.style.animationDelay = `${index * 50}ms`;
                 div.setAttribute('role', 'listitem');
                 
                 div.innerHTML = `
                     <div class="list-item-title">${hospitalName}</div>
                     <div class="list-item-meta">ID: ${hospitalId}</div>
+                    <i class="lucide lucide-arrow-right" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); opacity: 0.5; width: 18px; height: 18px;"></i>
                 `;
                 
                 div.onclick = () => {

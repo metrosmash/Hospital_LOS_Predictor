@@ -3,86 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOS Prediction</title>
+    <title>LOS Prediction Form</title>
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.min.css">
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/assets/css/base.css">
-    
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background: var(--color-bg-alt);
-        }
-        
-        .form-section {
-            background: white;
-            padding: var(--space-xl);
-            border-radius: 8px;
-            margin-bottom: var(--space-lg);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .form-section-title {
-            font-size: var(--font-size-lg);
-            font-weight: 600;
-            margin-bottom: var(--space-lg);
-            padding-bottom: var(--space-md);
-            border-bottom: 2px solid var(--color-border);
-            color: var(--color-primary);
-        }
-        
-        .hospital-info {
-            background: var(--color-bg-alt);
-            padding: var(--space-lg);
-            border-radius: 6px;
-            margin-bottom: var(--space-xl);
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: var(--space-sm);
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: var(--color-text-muted);
-        }
-        
-        .info-value {
-            color: var(--color-text);
-        }
-    </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <header class="app-header">
-    <h class="app-title">Length of Stay Prediction</h>
+    <h1 class="app-title">📊 Length of Stay Prediction</h1>
     <div class="breadcrumb" id="breadcrumb"></div>
 </header>
 
 <!-- MAIN CONTENT -->
 <main class="form-container">
     
-    <!-- Hospital Context -->
+    <!-- Back navigation -->
+    <a href="#" onclick="history.back(); return false;" class="back-button">
+        <i class="lucide lucide-arrow-left" style="width: 16px; height: 16px;"></i>
+        <span>Back to Hospital Selection</span>
+    </a>
+    
+    <!-- Hospital Context Card -->
     <div class="hospital-info">
-        <h2 style="margin-bottom: var(--space-md); font-size: var(--font-size-lg);">
-            Prediction Context
-        </h2>
-        <div class="info-row">
-            <span class="info-label">Hospital:</span>
-            <span class="info-value" id="hospital-name">--</span>
+        <div class="hospital-context-header">
+            <div class="hospital-context-icon">
+                <i class="lucide lucide-hospital" style="width: 32px; height: 32px; color: white;"></i>
+            </div>
+            <div>
+                <h2 class="hospital-context-title">Prediction Context</h2>
+                <p class="hospital-context-subtitle">Enter patient information for LOS prediction</p>
+            </div>
         </div>
-        <div class="info-row">
-            <span class="info-label">County:</span>
-            <span class="info-value" id="county-name">--</span>
+        
+        <div class="context-details">
+            <div class="context-item">
+                <div class="context-label">Hospital</div>
+                <div class="context-value" id="hospital-name">--</div>
+            </div>
+            <div class="context-item">
+                <div class="context-label">County</div>
+                <div class="context-value" id="county-name">--</div>
+            </div>
+            <div class="context-item">
+                <div class="context-label">Hospital ID</div>
+                <div class="context-value" id="hospital-id">--</div>
+            </div>
         </div>
-        <div class="info-row">
-            <span class="info-label">Hospital ID:</span>
-            <span class="info-value" id="hospital-id">--</span>
+    </div>
+    
+    <!-- Progress Indicator -->
+    <div class="form-progress">
+        <div class="progress-step completed">
+            <div class="progress-dot">✓</div>
+            <span>County</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step completed">
+            <div class="progress-dot">✓</div>
+            <span>Hospital</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step active">
+            <div class="progress-dot">3</div>
+            <span>Patient Info</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+            <div class="progress-dot">4</div>
+            <span>Results</span>
         </div>
     </div>
     
@@ -91,7 +89,10 @@
         
         <!-- Section 1: Demographics -->
         <div class="form-section">
-            <h3 class="form-section-title">Patient Demographics</h3>
+            <h3 class="form-section-title">
+                <i class="lucide lucide-user" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i>
+                Patient Demographics
+            </h3>
             
             <div class="form-grid">
                 <div class="form-field">
@@ -158,7 +159,10 @@
         
         <!-- Section 2: Clinical Information -->
         <div class="form-section">
-            <h3 class="form-section-title">Clinical Information</h3>
+            <h3 class="form-section-title">
+                <i class="lucide lucide-activity" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i>
+                Clinical Information
+            </h3>
             
             <div class="form-grid">
                 <div class="form-field">
@@ -269,7 +273,10 @@
         
         <!-- Section 3: Additional Factors (Optional) -->
         <div class="form-section">
-            <h3 class="form-section-title">Additional Factors (Optional)</h3>
+            <h3 class="form-section-title">
+                <i class="lucide lucide-clipboard-list" style="width: 20px; height: 20px; display: inline-block; margin-right: 8px; vertical-align: middle;"></i>
+                Additional Factors (Optional)
+            </h3>
             
             <div class="form-grid">
                 <div class="form-field">
@@ -303,10 +310,14 @@
         </div>
         
         <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary btn-full btn-lg">
-            <span>Calculate Predicted Length of Stay</span>
-            <span>→</span>
-        </button>
+        <div class="submit-section">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="lucide lucide-calculator" style="width: 20px; height: 20px;"></i>
+                <span>Calculate Predicted Length of Stay</span>
+                <i class="lucide lucide-arrow-right" style="width: 20px; height: 20px;"></i>
+            </button>
+            <p class="submit-hint">All required fields must be completed before prediction</p>
+        </div>
         
     </form>
     
@@ -330,13 +341,15 @@
     const countyName = StateManager.getParam('county_name');
     const countyId = StateManager.getParam('county_id');
     
+    console.log('Page loaded with params:', { hospitalId, hospitalName, countyName, countyId });
+    
     // =============================================
     // UPDATE PAGE CONTENT
     // =============================================
     
-    document.getElementById('hospital-name').textContent = hospitalName;
-    document.getElementById('county-name').textContent = countyName;
-    document.getElementById('hospital-id').textContent = hospitalId;
+    document.getElementById('hospital-name').textContent = hospitalName || '--';
+    document.getElementById('county-name').textContent = countyName || '--';
+    document.getElementById('hospital-id').textContent = hospitalId || '--';
     
     StateManager.renderBreadcrumbs();
     
@@ -353,16 +366,21 @@
     document.getElementById('prediction-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        console.log('Form submitted');
+        
         // Clear previous errors
         Validator.clearAllErrors();
         
         // Get form data
         const formData = Validator.getFormData('prediction-form');
+        console.log('Form data:', formData);
         
         // Validate
         const validation = Validator.validateForm(formData);
         
         if (!validation.valid) {
+            console.log('Validation failed:', validation.errors);
+            
             // Show errors
             Object.keys(validation.errors).forEach(fieldName => {
                 Validator.showFieldError(fieldName, validation.errors[fieldName]);
@@ -389,11 +407,12 @@
         
         // Show loading state
         const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
+        const originalHTML = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Calculating...</span>';
+        submitBtn.innerHTML = '<div class="spinner"></div><span>Calculating...</span>';
         
         try {
+            // Call the prediction API - FIXED ENDPOINT
             const response = await fetch('/api/predict', {
                 method: 'POST',
                 headers: { 
@@ -402,8 +421,10 @@
                 body: JSON.stringify(payload)
             });
             
+            console.log('Response status:', response.status);
+            
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.message || `API Error: ${response.status}`);
             }
             
@@ -429,11 +450,37 @@
             console.error('Prediction failed:', error);
             
             // Show user-friendly error
-            alert(`Prediction failed: ${error.message}\n\nPlease check your inputs and try again.`);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.style.marginBottom = 'var(--space-xl)';
+            errorDiv.innerHTML = `
+                <div class="error-title">Prediction Failed</div>
+                <p>Unable to get prediction. Please try again.</p>
+                <p style="font-size: var(--font-size-sm); margin-top: var(--space-sm);">
+                    <strong>Error:</strong> ${error.message}
+                </p>
+                <p style="font-size: var(--font-size-sm); color: var(--color-text-muted); margin-top: var(--space-sm);">
+                    If this persists, please check that the backend server is running and the /api/predict endpoint is available.
+                </p>
+            `;
+            
+            // Remove any existing error messages
+            const existingError = document.querySelector('.error-message');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add new error at top of form container
+            const formContainer = document.querySelector('.form-container');
+            const firstChild = formContainer.firstElementChild;
+            formContainer.insertBefore(errorDiv, firstChild.nextSibling);
+            
+            // Scroll to error
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
             
             // Restore button
             submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
+            submitBtn.innerHTML = originalHTML;
         }
     });
 </script>
