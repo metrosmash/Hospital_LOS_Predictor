@@ -1,6 +1,6 @@
 # 🏥 Hospital Length of Stay Predictor
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)](https://flask.palletsprojects.com/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-ML-orange.svg)](https://xgboost.readthedocs.io/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -70,7 +70,21 @@ hospital-los-predictor/
 │
 ├── app.py                          # Flask backend with ML prediction API
 ├── cleaning_script.py              # Data preprocessing pipeline
-├── requirements.txt                # Python dependencies
+├── requirements.txt                # Python dependencies (runtime)
+├── requirements-dev.txt            # Test dependencies (pytest)
+├── Dockerfile                      # Production image (Python 3.12, models fetched at build)
+├── .dockerignore                   # Keeps models/local envs out of the image
+├── DEPLOY.md                       # Releases & model-update runbook
+│
+├── scripts/
+│   └── download_models.py            # Fetches .pkl files from Hugging Face Hub
+│
+├── tests/
+│   └── test_api.py                   # API contract tests (pytest, Flask test client)
+│
+├── .github/workflows/
+│   ├── CI.yml                        # Install + download models + pytest (push/PR)
+│   └── CD.yml                        # Tag-gated Docker → GHCR → Render deploy
 │
 ├── templates/                      # HTML pages
 │   ├── index.html                  # County selection (homepage)
@@ -87,18 +101,13 @@ hospital-los-predictor/
 │   │   ├── mapUtils.js             # Leaflet.js map utilities
 │   │   └── validation.js           # Form validation & data mapping
 │   │
-│   ├── data/
-│   │   ├── ny_counties.geojson     # NY State county boundaries
-│   │   └── hospital_location_geojson1.geojson  # Hospital locations
-│   │
-│   └── pkl_files/                  # Trained ML artifacts
-│       ├── xgb_modelv1.pkl         # XGBoost model
-│       ├── xgb_hospital_full_pipeline.pkl  # Full preprocessing pipeline
-│       ├── feature_names.pkl       # Expected feature columns
-│       ├── mdc_mapping.pkl         # MDC code → LOS mapping
-│       ├── severity_mapping.pkl    # Severity → LOS mapping
-│       └── mdc_conversion_mapping.pkl  # MDC description → code
+│   └── data/
+│      ├── ny_counties.geojson     # NY State county boundaries
+│      └── hospital_location_geojson1.geojson  # Hospital locations
 │
+│   └── pkl_files/                    # Trained ML artifacts (NOT in git — fetched
+│                                     # from Hugging Face at setup/build, see below)
+│   
 ├── notebooks/                      # (Optional) Analysis & training
 │   └── 2017 New York Hospital Discharge EDA.ipynb
 │
@@ -110,7 +119,7 @@ hospital-los-predictor/
 ## 🔧 Requirements
 
 ### System Requirements
-- **Python**: 3.8 or higher
+- **Python**: 3.12 (pinned in CI and Docker)
 - **RAM**: 2GB minimum (4GB recommended)
 - **Disk Space**: 500MB for model files and data
 
@@ -153,19 +162,23 @@ source venv/bin/activate
 
 ### 3. Install Dependencies
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt
+pip install huggingface_hub   # one-time, for the model download step
 ```
 
-### 4. Verify Model Files
-Ensure these files exist in `assets/pkl_files/`:
-- ✅ `xgb_modelv1.pkl`
-- ✅ `xgb_hospital_full_pipeline.pkl`
-- ✅ `feature_names.pkl`
-- ✅ `mdc_mapping.pkl`
-- ✅ `severity_mapping.pkl`
-- ✅ `mdc_conversion_mapping.pkl`
+### 4. Download Model Files
+Model binaries are **not** stored in git — they live on Hugging Face Hub
+([Ajiboye/ny2017hospital_predict_model](https://huggingface.co/Ajiboye/ny2017hospital_predict_model),
+under its `pkl_files/` folder) and are fetched into `assets/pkl_files/`:
+```bash
+python scripts/download_models.py
+```
+Expected files after download: `xgb_modelv1.pkl`,
+`xgb_hospital_full_pipeline.pkl`, `feature_names.pkl`, `mdc_mapping.pkl`,
+`severity_mapping.pkl`, `mdc_conversion_mapping.pkl`.
 
-> **Note**: If model files are missing, you'll need to train the model first. See [Training the Model](#training-the-model) below.
+> **Note**: To retrain instead, see [Training the Model](#training-the-model) below,
+> then upload the new `.pkl`s to the Hub repo — see `DEPLOY.md`.
 
 ### 5. Verify Data Files
 Check `assets/data/`:
@@ -217,6 +230,9 @@ The preprocessing pipeline adds:
 
 ## 🚀 Running Locally
 
+> **Prerequisite**: run `python scripts/download_models.py` once after cloning
+> so `assets/pkl_files/` is populated (see setup step 4).
+
 ### Development Mode
 ```bash
 # Activate virtual environment
@@ -239,6 +255,31 @@ gunicorn -w 4 -b 0.0.0.0:5000 --timeout 120 app:app
 - `-w 4`: 4 worker processes
 - `-b 0.0.0.0:5000`: Bind to all interfaces on port 5000
 - `--timeout 120`: 120-second request timeout (for ML inference)
+
+### Running Tests
+```bash
+python -m pytest tests/ -q
+```
+
+Contract tests hit the API via Flask test client (`/api/health`,
+`/api/predict`, `/api/model-info`) — no live server needed.
+
+---
+
+## 🚢 CI/CD & Releases
+
+- **CI** (`.github/workflows/CI.yml`): runs on every push/PR — Python 3.12,
+  install, Hub model download, pytest.
+- **CD** (`.github/workflows/CD.yml`): runs only on version tags
+  (`vX.Y.Z`, e.g. `git tag v1.2.3 && git push origin v1.2.3`) — builds the
+  Docker image (models fetched at build, tag baked in as `APP_VERSION`),
+  pushes to GHCR, smoke-tests `/api/health`, then triggers the Render
+  deploy hook.
+- **Model updates**: upload new `.pkl`s to the Hub repo, then push a new
+  version tag — no app-code change needed.
+
+Full runbook (secrets `LOS_HF_Token` / `RENDER_DEPLOY_HOOK`, fresh-clone flow,
+verification): see **[DEPLOY.md](DEPLOY.md)**.
 
 ### Testing the API Directly
 ```bash
@@ -501,18 +542,21 @@ joblib.dump(cleaner, 'assets/pkl_files/xgb_hospital_full_pipeline.pkl')
 
 **Solution**:
 ```bash
-# Check if model files exist
-ls -lh assets/pkl_files/
+# Model files are git-ignored — (re)fetch them from Hugging Face Hub
+python scripts/download_models.py
 
-# Expected files:
+# Expected files in assets/pkl_files/:
 # - xgb_modelv1.pkl
 # - xgb_hospital_full_pipeline.pkl
 # - feature_names.pkl
 # - mdc_mapping.pkl
 # - severity_mapping.pkl
+# - mdc_conversion_mapping.pkl
 ```
 
-If missing, retrain the model or download from release artifacts.
+If the download fails, check the Hub repo contents and your `LOS_HF_Token`
+secret (locally: `LOS_HF_Token` env var). As a last resort, retrain — see
+[Training the Model](#training-the-model).
 
 ---
 
