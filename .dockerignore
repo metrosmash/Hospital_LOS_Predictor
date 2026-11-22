@@ -1,0 +1,14 @@
+los_env/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.scratch/
+.git/
+.github/
+docs/
+assets/pkl_files/
+assets/screenshots/
+assets/notebooks/
+*.pkl

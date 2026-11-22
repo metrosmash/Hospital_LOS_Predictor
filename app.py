@@ -30,6 +30,10 @@ sys.modules['__main__'].HospitalDataCleaner = cleaning_script.HospitalDataCleane
 PORT = int(os.environ.get('PORT', 8000))
 DEBUG = os.environ.get('FLASK_ENV') != 'production'
 
+
+def get_app_version():
+    return os.environ.get('APP_VERSION', 'dev')
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
@@ -428,7 +432,7 @@ def predict():
             ],
             'risk_factors': risk_factors,
             'metadata': {
-                'model_version': '1.0.0',
+                'model_version': get_app_version(),
                 'prediction_timestamp': datetime.now().isoformat(),
                 'hospital_id': data.get('hospital_id'),
                 'hospital_name': data.get('hospital_name'),
@@ -479,7 +483,7 @@ def health_check():
         'status': 'healthy' if MODEL_LOADED else 'degraded',
         'model_loaded': MODEL_LOADED,
         'expected_features': len(column_names) if column_names else None,
-        'version': '1.0.0',
+        'version': get_app_version(),
         'timestamp': datetime.now().isoformat()
     })
 

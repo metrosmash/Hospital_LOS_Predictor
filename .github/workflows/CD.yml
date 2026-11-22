@@ -1,0 +1,60 @@
+name: CD
+
+on:
+  push:
+    tags:
+      - "v[0-9]*.[0-9]*.[0-9]*"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set lowercase image name (GHCR rejects uppercase)
+        run: echo "IMAGE=${{ env.REGISTRY }}/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
+            LOS_HF_Token=${{ secrets.LOS_HF_Token }}
+
+      - name: Smoke test published image
+        run: |
+          docker run -d --name los-smoke -p 8000:8000 \
+            ${{ env.IMAGE }}:${{ github.ref_name }}
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:8000/api/health | grep -q '"model_loaded": *true'; then
+              echo "smoke OK"; docker stop los-smoke; exit 0
+            fi
+            sleep 5
+          done
+          echo "smoke FAILED"; docker logs los-smoke; docker stop los-smoke; exit 1
+
+      - name: Trigger Render deploy hook
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
