@@ -270,13 +270,13 @@ Contract tests hit the API via Flask test client (`/api/health`,
 
 - **CI** (`.github/workflows/CI.yml`): runs on every push/PR — Python 3.12,
   install, Hub model download, pytest.
-- **CD** (`.github/workflows/CD.yml`): runs only on version tags
-  (`vX.Y.Z`, e.g. `git tag v1.2.3 && git push origin v1.2.3`) — builds the
-  Docker image (models fetched at build, tag baked in as `APP_VERSION`),
-  pushes to GHCR, smoke-tests `/api/health`, then triggers the Render
-  deploy hook.
-- **Model updates**: upload new `.pkl`s to the Hub repo, then push a new
-  version tag — no app-code change needed.
+- **CD** (`.github/workflows/CD.yml`): runs on merge to `main`, monthly
+  (1st, 03:00 UTC) when the Hub models changed, or manual Run workflow —
+  builds the Docker image (models fetched at build, commit SHA baked in as
+  `APP_VERSION`), pushes to GHCR, smoke-tests `/api/health`, then triggers
+  the Render deploy hook.
+- **Model updates**: upload new `.pkl`s to the Hub repo and do nothing else —
+  the monthly poll redeploys automatically.
 
 Full runbook (secrets `LOS_HF_Token` / `RENDER_DEPLOY_HOOK`, fresh-clone flow,
 verification): see **[DEPLOY.md](DEPLOY.md)**.
