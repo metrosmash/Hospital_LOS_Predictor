@@ -210,7 +210,6 @@ __marimo__/
 # Model binaries ship via Hugging Face Hub (see scripts/download_models.py)
 assets/pkl_files/*.pkl
 !assets/pkl_files/.gitkeep
-DEPLOY.md
 
 # Issues 
 *.scratch
